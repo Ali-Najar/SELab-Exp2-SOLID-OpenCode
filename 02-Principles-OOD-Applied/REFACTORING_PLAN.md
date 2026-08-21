@@ -11,8 +11,10 @@
 3. **Discounts**: converted to an ordered first-match-wins rule list
    (VIP 20% > bulk ≥10 items 10% > WELCOME10 10%); exactly one discount ever
    applies, matching baseline precedence.
-4. **Cash payment**: out of scope for this checkpoint; added only after this
-   state is committed.
+4. **Cash payment**: added after the checkpoint commit as a new `CashPayment`
+   strategy registered in the composition root; `PaymentProcessor` was not
+   modified. Output strings mirror the non-SOLID version
+   (`[payment] Cash payment {amount:.2f}` / `paid_by_cash:{amount:.2f}`).
 
 ## Applied structure
 

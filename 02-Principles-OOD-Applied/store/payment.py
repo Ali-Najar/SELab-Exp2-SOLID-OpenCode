@@ -36,6 +36,16 @@ class BitcoinPayment(PaymentMethod):
         return f"paid_by_bitcoin:{amount:.2f}"
 
 
+class CashPayment(PaymentMethod):
+    @property
+    def key(self) -> str:
+        return "cash"
+
+    def pay(self, order, amount: float) -> str:
+        print(f"[payment] Cash payment {amount:.2f}")
+        return f"paid_by_cash:{amount:.2f}"
+
+
 class PaymentProcessor(PaymentService):
     def __init__(self, methods: Iterable[PaymentMethod]):
         self._methods = {

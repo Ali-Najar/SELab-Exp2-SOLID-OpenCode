@@ -6,6 +6,7 @@ from store.contracts import PaymentMethod
 from store.models import Customer, Order
 from store.payment import (
     BitcoinPayment,
+    CashPayment,
     CreditCardPayment,
     PayPalPayment,
     PaymentProcessor,
@@ -65,29 +66,58 @@ class PaymentStrategyTests(unittest.TestCase):
 
     def test_unknown_method_raises_value_error(self):
         with self.assertRaises(ValueError) as ctx:
-            build_processor().process(make_order("cash"), 10.0)
+            build_processor().process(make_order("crypto"), 10.0)
 
-        self.assertEqual(str(ctx.exception), "Unknown payment method: 'cash'")
+        self.assertEqual(str(ctx.exception), "Unknown payment method: 'crypto'")
 
     def test_new_methods_plug_in_without_modifying_processor(self):
-        class CashPayment(PaymentMethod):
+        class BarterPayment(PaymentMethod):
             @property
             def key(self) -> str:
-                return "cash"
+                return "barter"
 
             def pay(self, order, amount: float) -> str:
-                return f"paid_by_cash:{amount:.2f}"
+                return f"paid_by_barter:{amount:.2f}"
 
         processor = PaymentProcessor([
+            CreditCardPayment(),
+            PayPalPayment(),
+            BitcoinPayment(),
+            BarterPayment(),
+        ])
+
+        receipt = processor.process(make_order("barter"), 7.5)
+
+        self.assertEqual(receipt, "paid_by_barter:7.50")
+
+
+class CashPaymentTests(unittest.TestCase):
+    def build_cash_processor(self):
+        return PaymentProcessor([
             CreditCardPayment(),
             PayPalPayment(),
             BitcoinPayment(),
             CashPayment(),
         ])
 
-        receipt = processor.process(make_order("cash"), 7.5)
+    def test_cash_payment_prints_and_returns_receipt(self):
+        order = make_order("cash")
 
-        self.assertEqual(receipt, "paid_by_cash:7.50")
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            receipt = self.build_cash_processor().process(order, 12.5)
+
+        self.assertEqual(receipt, "paid_by_cash:12.50")
+        self.assertIn("[payment] Cash payment 12.50", buffer.getvalue())
+
+    def test_cash_plugs_into_unmodified_processor(self):
+        order = make_order("cash")
+
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            receipt = self.build_cash_processor().process(order, 3.0)
+
+        self.assertEqual(receipt, "paid_by_cash:3.00")
 
 
 if __name__ == "__main__":

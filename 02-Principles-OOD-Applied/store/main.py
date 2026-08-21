@@ -21,52 +21,85 @@ from store.validation import DefaultOrderValidator
 
 def build_demo_orders():
     vip = Customer(
-        id=1, name="Alice", email="alice@example.com",
-        phone="555-0100", is_vip=True, credit_card="4111 1111 1111 1111",
+        id=1,
+        name="Alice",
+        email="alice@example.com",
+        phone="555-0100",
+        is_vip=True,
+        credit_card="4111 1111 1111 1111",
     )
+
     regular = Customer(
-        id=2, name="Bob", email="bob@example.com", phone="555-0199",
+        id=2,
+        name="Bob",
+        email="bob@example.com",
+        phone="555-0199",
     )
 
     laptop = Order(
-        id=101, customer=vip, payment_method="credit_card",
-        items=[OrderItem(1, "Laptop", 999.99, 1),
-               OrderItem(2, "Mouse", 25.00, 1)],
+        id=101,
+        customer=vip,
+        payment_method="credit_card",
+        items=[
+            OrderItem(1, "Laptop", 999.99, 1),
+            OrderItem(2, "Mouse", 25.00, 1),
+        ],
     )
 
     books = Order(
-        id=102, customer=regular, payment_method="paypal",
-        items=[OrderItem(3, "Clean Code", 45.00, 2),
-               OrderItem(4, "Pragmatic Programmer", 40.00, 2)],
+        id=102,
+        customer=regular,
+        payment_method="paypal",
+        items=[
+            OrderItem(3, "Clean Code", 45.00, 2),
+            OrderItem(4, "Pragmatic Programmer", 40.00, 2),
+        ],
     )
 
-    bundle = BundleOrder(id=103, customer=vip, orders=[laptop, books])
+    bundle = BundleOrder(
+        id=103,
+        customer=vip,
+        orders=[laptop, books],
+    )
     bundle.payment_method = "credit_card"
+
     return laptop, books, bundle
 
 
 def build_order_service() -> OrderService:
-    return OrderService(
-        validator=DefaultOrderValidator(),
-        pricing=RuleBasedDiscountCalculator([
+    pricing = RuleBasedDiscountCalculator(
+        [
             VipDiscountRule(),
             BulkDiscountRule(),
             WelcomeCouponDiscountRule(),
-        ]),
-        shipping=StandardShippingService(),
-        payment=PaymentProcessor([
+        ]
+    )
+
+    payment = PaymentProcessor(
+        [
             CreditCardPayment(),
             PayPalPayment(),
             BitcoinPayment(),
-        ]),
+        ]
+    )
+
+    return OrderService(
+        validator=DefaultOrderValidator(),
+        pricing=pricing,
+        shipping=StandardShippingService(),
+        payment=payment,
         repository=MySqlDatabase(),
-        notifiers=[EmailNotifier(), SmsNotifier()],
+        notifiers=[
+            EmailNotifier(),
+            SmsNotifier(),
+        ],
         receipt_printer=ConsoleReceiptPrinter(),
     )
 
 
 def main() -> None:
     service = build_order_service()
+
     laptop, books, bundle = build_demo_orders()
 
     print(">>> Checkout a simple order")
