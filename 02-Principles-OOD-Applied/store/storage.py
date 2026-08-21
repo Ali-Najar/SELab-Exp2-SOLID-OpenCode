@@ -1,4 +1,7 @@
-class MySqlDatabase:
+from store.contracts import OrderRepository
+
+
+class MySqlDatabase(OrderRepository):
     def __init__(self, connection_string: str = "mysql://localhost/store"):
         self._connection_string = connection_string
         self._orders = {}

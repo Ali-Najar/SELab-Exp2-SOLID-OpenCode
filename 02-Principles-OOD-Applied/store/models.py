@@ -46,5 +46,16 @@ class Order:
 
 class BundleOrder(Order):
     def __init__(self, id: int, customer: Customer, orders: List[Order]):
-        super().__init__(id=id, customer=customer, items=[])
+        flattened_items = [
+            item
+            for child_order in orders
+            for item in child_order.items
+        ]
+
+        super().__init__(
+            id=id,
+            customer=customer,
+            items=flattened_items,
+        )
+
         self.orders = orders

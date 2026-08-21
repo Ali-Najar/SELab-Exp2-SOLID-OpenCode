@@ -1,17 +1,40 @@
-from store.models import Order
+class VipDiscountRule:
+    def applies(self, order):
+        return order.customer.is_vip
+
+    def calculate(self, order):
+        return order.subtotal * 0.20
 
 
-class DiscountCalculator:
-    def calculate(self, order: Order) -> float:
-        subtotal = order.subtotal
+class BulkDiscountRule:
+    def applies(self, order):
+        return order.item_count >= 10
 
-        if order.customer.is_vip:
-            discount = subtotal * 0.20
-        elif order.item_count >= 10:
-            discount = subtotal * 0.10
-        elif "WELCOME10" in order.coupons:
-            discount = subtotal * 0.10
-        else:
-            discount = 0.0
+    def calculate(self, order):
+        return order.subtotal * 0.10
 
-        return round(discount, 2)
+
+class WelcomeCouponDiscountRule:
+    def applies(self, order):
+        return "WELCOME10" in order.coupons
+
+    def calculate(self, order):
+        return order.subtotal * 0.10
+
+
+class RuleBasedDiscountCalculator:
+    def __init__(self, rules=None):
+        if rules is None:
+            rules = [
+                VipDiscountRule(),
+                BulkDiscountRule(),
+                WelcomeCouponDiscountRule(),
+            ]
+        self.rules = list(rules)
+
+    def calculate(self, order):
+        for rule in self.rules:
+            if rule.applies(order):
+                return round(rule.calculate(order), 2)
+
+        return 0.0
