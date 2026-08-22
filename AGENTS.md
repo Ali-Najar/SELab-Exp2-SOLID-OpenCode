@@ -1,42 +1,65 @@
 # AGENTS.md
 
-University SE-lab experiment (#2): applying OOD/SOLID principles with OpenCode to a small `store` checkout demo. README is in Persian.
+University Software Engineering Lab experiment #2: applying OOD/SOLID principles with OpenCode to a small Python checkout demo. The main report is in Persian in `README.md`.
 
-## Layout & experiment rules
+## Repository layout
 
-Two independent versions of the same project (`models`, `order_service`, `pricing`, `payment`, `notification`, `storage`, `main`; entry point is `store/main.py`):
+- `01-Principles-OOD-Without/` — original non-SOLID architecture with the requested Cash feature added using the existing design.
+- `02-Principles-OOD-Applied/` — SOLID-refactored architecture. The refactor is conceptually checkpointed before Cash; the final deliverable also contains Cash as an extension strategy.
+- `.opencode/skills/solid-review/SKILL.md` — project-local SOLID analysis Skill.
+- `docs/PROMPTS.md` — documented AI prompts/interactions.
+- `docs/AI_USAGE.md` — AI usage and human-review decisions.
+- `docs/TEST_REPORT.md` — verification summary.
 
-- `01-Principles-OOD-Without/store/` — the original non-SOLID architecture. Do **not** apply SOLID refactoring here. Its only planned change: implement cash payment **using the existing design**, with minimum changes that preserve existing behavior. Explain proposed changes before applying them.
-- `02-Principles-OOD-Applied/store/` — starts from the same baseline **without cash**. Workflow order matters:
-  1. Analyze SRP, OCP, LSP, ISP, DIP on the baseline.
-  2. Produce a refactoring plan before making major changes.
-  3. Apply the SOLID refactor and add regression tests.
-  4. Commit this checkpoint **before** adding cash.
-  5. Only then implement cash payment.
-- Avoid unnecessary abstractions and overengineering; preserve intended business behavior in both trees.
+## Experiment rules
 
-## Running
+### Version 01
 
-Run each experiment **from inside its folder**:
+- Do not apply SOLID refactoring here.
+- Cash must be implemented using the existing architecture.
+- Keep changes minimal and preserve original behavior, including known design defects that are later analyzed.
 
+### Version 02
+
+- Analyze SRP, OCP, LSP, ISP and DIP before editing.
+- Produce/review a refactoring plan before Build changes.
+- Preserve intended business behavior unless a behavior is demonstrably caused by a SOLID violation; document intentional behavior changes.
+- Keep `OrderService` as orchestration only.
+- Use dependency injection rather than constructing infrastructure inside the high-level service.
+- Payment extensions should not require editing the dispatch logic of `PaymentProcessor`.
+- Add regression tests.
+- The intended Git workflow is: commit the SOLID refactor before adding Cash, then add Cash in a later commit.
+
+## Running on Windows / PowerShell
+
+Run each version from inside its own directory:
+
+```powershell
+py -B -m store.main
 ```
-python -m store.main
+
+Run SOLID-version tests from `02-Principles-OOD-Applied`:
+
+```powershell
+py -B -m unittest discover -s tests -v
 ```
 
-`python store/main.py` or running from the repo root fails with `ModuleNotFoundError` (packages rely on namespace packages; there is no `__init__.py`).
+The project uses only Python standard-library modules; no `requirements.txt` is needed.
 
-## Verification
+## Verification expectations
 
-- Pure stdlib Python (no `requirements.txt`, no venv needed). Verified with Python 3.13.
-- No lint/typecheck/CI exists. Verify by running the demo and checking the printed receipts/output, plus the regression tests added under `02`.
-- Verify after every major refactoring step.
+- Run tests after every major refactoring step.
+- Review diffs before committing.
+- Do not treat AI output as authoritative; inspect code and test behavior.
+- Current final regression suite contains 40 tests.
 
-## AI usage expectations (assignment)
+## AI usage expectations
 
-- AI is a development assistant, not the final decision maker: explain important architectural decisions and report uncertainties.
-- Do not silently change business rules.
+- AI acts as a development assistant, not the final decision maker.
+- Important decisions, corrections and rejected/modified proposals must be documented.
+- Do not include secrets, API keys or credentials in reports or prompts.
 
-## Git gotchas
+## Git hygiene
 
-- `.gitignore` only covers macOS/VSCode — it has no Python entries, so `__pycache__/` shows up as untracked after any run (exists in both trees already). Never commit it.
-- Checkpoint commits are part of the required workflow in `02` (SOLID refactor committed before cash); otherwise don't commit without being asked.
+- Do not commit `__pycache__/`, `*.pyc`, virtual environments, local IDE history or secrets.
+- Keep `.opencode/skills/solid-review/SKILL.md` tracked because it is part of the experiment deliverable.
